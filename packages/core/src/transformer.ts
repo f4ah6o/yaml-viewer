@@ -122,21 +122,21 @@ export function calculateLayout(graph: WorkflowGraph): void {
     queue.push(...nextLayer);
   }
 
-  // レイヤーに基づいて位置を設定
+  // レイヤーに基づいて位置を設定（縦方向Top-Bottom）
   const nodePositions = new Map<string, { x: number; y: number }>();
   const nodeWidth = 200;
-  const nodeHeight = 100;
-  const horizontalGap = 80;
+  const nodeHeight = 80;
+  const horizontalGap = 40;
   const verticalGap = 80;
 
   layers.forEach((layer, layerIndex) => {
-    const x = layerIndex * (nodeWidth + horizontalGap);
-    const startY = -(layer.length - 1) * (nodeHeight + verticalGap) / 2;
+    const y = layerIndex * (nodeHeight + verticalGap) + 50;
+    const startX = -(layer.length - 1) * (nodeWidth + horizontalGap) / 2;
 
     layer.forEach((nodeId, i) => {
       nodePositions.set(nodeId, {
-        x,
-        y: startY + i * (nodeHeight + verticalGap),
+        x: startX + i * (nodeWidth + horizontalGap),
+        y,
       });
     });
   });
