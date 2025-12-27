@@ -13,7 +13,8 @@ export function transformWorkflowToGraph(workflow: Workflow): WorkflowGraph {
 
   // ノード生成
   const nodes: GraphNode[] = jobEntries.map(([jobId, job]) => {
-    const stepCount = Array.isArray(job.steps) ? job.steps.length : 0;
+    const steps = job.steps || [];
+    const stepCount = steps.length;
     const needs = normalizeNeeds(job.needs);
 
     const nodeData: JobNodeData = {
@@ -21,6 +22,7 @@ export function transformWorkflowToGraph(workflow: Workflow): WorkflowGraph {
       runsOn: normalizeRunsOn(job.runsOn),
       needs,
       stepCount,
+      steps,
     };
 
     return {

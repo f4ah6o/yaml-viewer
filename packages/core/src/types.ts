@@ -8,6 +8,17 @@ export interface Workflow {
   jobs: Record<string, Job>;
 }
 
+export interface Step {
+  name?: string;
+  id?: string;
+  uses?: string;
+  run?: string;
+  with?: Record<string, unknown>;
+  env?: Record<string, unknown>;
+  if?: string;
+  [key: string]: unknown;
+}
+
 export interface Job {
   name?: string;
   runsOn?: string | string[];
@@ -18,17 +29,6 @@ export interface Job {
   env?: Record<string, unknown>;
   defaults?: Record<string, unknown>;
   outputs?: Record<string, string>;
-  [key: string]: unknown;
-}
-
-export interface Step {
-  name?: string;
-  id?: string;
-  uses?: string;
-  run?: string;
-  with?: Record<string, unknown>;
-  env?: Record<string, unknown>;
-  if?: string;
   [key: string]: unknown;
 }
 
@@ -54,6 +54,7 @@ export interface JobNodeData {
   needs: string[];
   stepCount: number;
   theme?: "dark" | "light";
+  steps?: Step[];
 }
 
 export interface GraphEdge {
