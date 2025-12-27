@@ -1,6 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { WorkflowGraph } from "@yamlviz/ui";
 import { yamlToGraph } from "@yamlviz/core";
+import {
+  createHighlighter,
+  type Highlighter,
+  type BundledLanguage,
+} from "shiki";
 
 const SAMPLE_YAML = `name: CI
 on: push
@@ -28,11 +33,53 @@ jobs:
       - run: npm deploy
 `;
 
+let highlighterInstance: Highlighter | null = null;
+
+async function getHighlighter(): Promise<Highlighter> {
+  if (!highlighterInstance) {
+    highlighterInstance = await createHighlighter({
+      themes: ["github-dark"],
+      langs: ["yaml"],
+    });
+  }
+  return highlighterInstance;
+}
+
+function highlightYaml(code: string): string {
+  if (!highlighterInstance) return code;
+  return highlighterInstance.codeToHtml(code, {
+    lang: "yaml",
+    theme: "github-dark",
+  });
+}
+
 export function App() {
   const [yaml, setYaml] = useState(SAMPLE_YAML);
   const [error, setError] = useState<string | null>(null);
+  const [highlighted, setHighlighted] = useState<string>("");
+  const [highlighterReady, setHighlighterReady] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const preRef = useRef<HTMLPreElement>(null);
 
-  const graph = yamlToGraph(yaml);
+  useEffect(() => {
+    getHighlighter().then(() => {
+      setHighlighterReady(true);
+      setHighlighted(highlightYaml(yaml));
+    });
+  }, []);
+
+  useEffect(() => {
+    if (highlighterReady) {
+      setHighlighted(highlightYaml(yaml));
+    }
+  }, [yaml, highlighterReady]);
+
+  const handleScroll = useCallback(() => {
+    if (textareaRef.current && preRef.current) {
+      preRef.current.scrollTop = textareaRef.current.scrollTop;
+      preRef.current.scrollLeft = textareaRef.current.scrollLeft;
+    }
+  }, []);
 
   const handleYamlChange = (value: string) => {
     setYaml(value);
@@ -76,7 +123,9 @@ export function App() {
           <button
             type="button"
             onClick={() => {
-              const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+              const input = document.querySelector(
+                'input[type="file"]',
+              ) as HTMLInputElement;
               input?.click();
             }}
             style={{
@@ -114,22 +163,56 @@ export function App() {
           >
             YAML Input
           </div>
-          <textarea
-            value={yaml}
-            onChange={(e) => handleYamlChange(e.target.value)}
+          <div
             style={{
               flex: 1,
-              padding: "16px",
-              border: "none",
-              background: "#0f172a",
-              color: "#e2e8f0",
-              fontFamily: "ui-monospace, monospace",
-              fontSize: "13px",
-              resize: "none",
-              outline: "none",
+              position: "relative",
+              overflow: "hidden",
             }}
-            placeholder="Paste your GitHub Workflow YAML here..."
-          />
+          >
+            <pre
+              ref={preRef}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                margin: 0,
+                padding: "16px",
+                background: "#0d1117",
+                pointerEvents: "none",
+                overflow: "auto",
+              }}
+              dangerouslySetInnerHTML={{ __html: highlighted }}
+            />
+            <textarea
+              ref={textareaRef}
+              value={yaml}
+              onChange={(e) => handleYamlChange(e.target.value)}
+              onScroll={handleScroll}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                padding: "16px",
+                border: "none",
+                background: "transparent",
+                color: "transparent",
+                caretColor: "white",
+                fontFamily: "ui-monospace, monospace",
+                fontSize: "13px",
+                lineHeight: "1.5",
+                resize: "none",
+                outline: "none",
+                overflow: "auto",
+                whiteSpace: "pre",
+              }}
+              placeholder="Paste your GitHub Workflow YAML here..."
+            />
+          </div>
         </div>
 
         <div style={{ flex: 1, position: "relative" }}>
