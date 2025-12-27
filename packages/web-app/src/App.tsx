@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { WorkflowGraph } from "@yamlviz/ui";
 import { yamlToGraph } from "@yamlviz/core";
-import {
-  createHighlighter,
-  type Highlighter,
-  type BundledLanguage,
-} from "shiki";
+import hljs from "highlight.js/lib/core";
+import yaml from "highlight.js/lib/languages/yaml";
+import "highlight.js/styles/github.css";
+
+hljs.registerLanguage("yaml", yaml);
 
 const SAMPLE_YAML = `name: CI
 on: push
@@ -33,46 +33,24 @@ jobs:
       - run: npm deploy
 `;
 
-let highlighterInstance: Highlighter | null = null;
-
-async function getHighlighter(): Promise<Highlighter> {
-  if (!highlighterInstance) {
-    highlighterInstance = await createHighlighter({
-      themes: ["github-dark"],
-      langs: ["yaml"],
-    });
-  }
-  return highlighterInstance;
-}
-
 function highlightYaml(code: string): string {
-  if (!highlighterInstance) return code;
-  return highlighterInstance.codeToHtml(code, {
-    lang: "yaml",
-    theme: "github-dark",
-  });
+  return hljs.highlight(code, { language: "yaml" }).value;
 }
 
 export function App() {
   const [yaml, setYaml] = useState(SAMPLE_YAML);
   const [error, setError] = useState<string | null>(null);
   const [highlighted, setHighlighted] = useState<string>("");
-  const [highlighterReady, setHighlighterReady] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
 
   useEffect(() => {
-    getHighlighter().then(() => {
-      setHighlighterReady(true);
-      setHighlighted(highlightYaml(yaml));
-    });
+    setHighlighted(highlightYaml(yaml));
   }, []);
 
   useEffect(() => {
-    if (highlighterReady) {
-      setHighlighted(highlightYaml(yaml));
-    }
-  }, [yaml, highlighterReady]);
+    setHighlighted(highlightYaml(yaml));
+  }, [yaml]);
 
   const handleScroll = useCallback(() => {
     if (textareaRef.current && preRef.current) {
@@ -100,14 +78,14 @@ export function App() {
       <header
         style={{
           padding: "12px 20px",
-          background: "#1e293b",
-          borderBottom: "1px solid #334155",
+          background: "#f6f8fa",
+          borderBottom: "1px solid #d0d7de",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
         }}
       >
-        <h1 style={{ margin: 0, fontSize: "18px", color: "#f1f5f9" }}>
+        <h1 style={{ margin: 0, fontSize: "18px", color: "#24292f" }}>
           YAMLViz - GitHub Workflow Visualizer
         </h1>
         <label>
@@ -147,7 +125,7 @@ export function App() {
         <div
           style={{
             width: "400px",
-            borderRight: "1px solid #334155",
+            borderRight: "1px solid #d0d7de",
             display: "flex",
             flexDirection: "column",
           }}
@@ -155,10 +133,10 @@ export function App() {
           <div
             style={{
               padding: "8px 12px",
-              background: "#0f172a",
-              borderBottom: "1px solid #334155",
+              background: "#f6f8fa",
+              borderBottom: "1px solid #d0d7de",
               fontSize: "12px",
-              color: "#94a3b8",
+              color: "#57606a",
             }}
           >
             YAML Input
@@ -180,12 +158,16 @@ export function App() {
                 bottom: 0,
                 margin: 0,
                 padding: "16px",
-                background: "#0d1117",
+                background: "#ffffff",
                 pointerEvents: "none",
                 overflow: "auto",
               }}
-              dangerouslySetInnerHTML={{ __html: highlighted }}
-            />
+            >
+              <code
+                style={{ fontFamily: "ui-monospace, monospace", fontSize: "13px" }}
+                dangerouslySetInnerHTML={{ __html: highlighted }}
+              />
+            </pre>
             <textarea
               ref={textareaRef}
               value={yaml}
@@ -201,7 +183,7 @@ export function App() {
                 border: "none",
                 background: "transparent",
                 color: "transparent",
-                caretColor: "white",
+                caretColor: "#24292f",
                 fontFamily: "ui-monospace, monospace",
                 fontSize: "13px",
                 lineHeight: "1.5",

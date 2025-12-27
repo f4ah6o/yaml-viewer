@@ -13,11 +13,11 @@ export function JobNode({ data }: NodeProps<JobNodeData>) {
         padding: "12px 16px",
         borderRadius: "8px",
         border: "2px solid #3b82f6",
-        background: "#1e293b",
-        color: "#e2e8f0",
+        background: "#ffffff",
+        color: "#24292f",
         minWidth: "180px",
         fontSize: "14px",
-        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.3)",
+        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
       }}
     >
       <Handle type="target" position={Position.Top} />
@@ -27,7 +27,7 @@ export function JobNode({ data }: NodeProps<JobNodeData>) {
       <div
         style={{
           fontSize: "12px",
-          color: "#94a3b8",
+          color: "#57606a",
           display: "flex",
           flexDirection: "column",
           gap: "4px",
