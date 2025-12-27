@@ -1,0 +1,17 @@
+{
+  "name": "@yamlviz/ui",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@xyflow/react": "^12.4.4",
+    "@yamlviz/core": "workspace:*",
+    "react": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "vitest": "^3.0.5"
+  }
+}

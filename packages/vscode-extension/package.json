@@ -1,0 +1,45 @@
+{
+  "name": "yamlviz",
+  "displayName": "YAMLViz - GitHub Workflow Visualizer",
+  "version": "0.0.1",
+  "publisher": "fu2hito",
+  "description": "Visualize GitHub Actions workflow YAML files as node graphs",
+  "type": "module",
+  "main": "out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "yamlviz.showGraph",
+        "title": "Show Workflow Graph",
+        "icon": "$(graph)"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "yamlviz.showGraph",
+          "when": "resourceExtname == .yaml",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "yamlviz.showGraph",
+          "when": "resourceExtname == .yaml",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "activationEvents": [
+    "onLanguage:yaml"
+  ],
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.96.0",
+    "@vscode/vsce": "^3.2.1",
+    "typescript": "^5.7.3"
+  }
+}
