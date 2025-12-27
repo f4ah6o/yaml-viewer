@@ -114,7 +114,7 @@ export function App() {
   };
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: styles.bg }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: styles.bg, transition: "background 0.3s ease" }}>
       <header
         style={{
           padding: "12px 20px",
@@ -123,9 +123,10 @@ export function App() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          transition: "background 0.3s ease, border-color 0.3s ease",
         }}
       >
-        <h1 style={{ margin: 0, fontSize: "18px", color: styles.headerText }}>
+        <h1 style={{ margin: 0, fontSize: "18px", color: styles.headerText, transition: "color 0.3s ease" }}>
           YAMLViz - GitHub Workflow Visualizer
         </h1>
         <div style={{ display: "flex", gap: "8px" }}>
@@ -140,6 +141,7 @@ export function App() {
               color: styles.headerText,
               cursor: "pointer",
               fontSize: "14px",
+              transition: "background 0.3s ease, border-color 0.3s ease, color 0.3s ease",
             }}
             title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
           >
@@ -171,6 +173,7 @@ export function App() {
                 color: theme === "dark" ? "#fdf6e3" : "#ffffff",
                 cursor: "pointer",
                 fontSize: "14px",
+                transition: "background 0.3s ease",
               }}
             >
               Open YAML
@@ -186,6 +189,7 @@ export function App() {
             borderRight: `1px solid ${styles.border}`,
             display: "flex",
             flexDirection: "column",
+            transition: "border-color 0.3s ease",
           }}
         >
           <div
@@ -195,6 +199,7 @@ export function App() {
               borderBottom: `1px solid ${styles.border}`,
               fontSize: "12px",
               color: styles.inputText,
+              transition: "background 0.3s ease, border-color 0.3s ease, color 0.3s ease",
             }}
           >
             YAML Input
@@ -219,6 +224,7 @@ export function App() {
                 background: styles.inputBg,
                 pointerEvents: "none",
                 overflow: "auto",
+                transition: "background 0.3s ease",
               }}
             >
               <code
@@ -249,13 +255,14 @@ export function App() {
                 outline: "none",
                 overflow: "auto",
                 whiteSpace: "pre",
+                transition: "caret-color 0.3s ease",
               }}
               placeholder="Paste your GitHub Workflow YAML here..."
             />
           </div>
         </div>
 
-        <div style={{ flex: 1, position: "relative", background: styles.bg }}>
+        <div style={{ flex: 1, position: "relative", background: styles.bg, transition: "background 0.3s ease" }}>
           {error ? (
             <div
               style={{
@@ -268,6 +275,7 @@ export function App() {
                 borderRadius: "8px",
                 border: "1px solid #dc322f",
                 color: "#dc322f",
+                transition: "background 0.3s ease",
               }}
             >
               {error}
@@ -283,6 +291,7 @@ export function App() {
                 transform: "translate(-50%, -50%)",
                 color: styles.inputText,
                 fontSize: "14px",
+                transition: "color 0.3s ease",
               }}
             >
               Enter a valid GitHub Workflow YAML to visualize

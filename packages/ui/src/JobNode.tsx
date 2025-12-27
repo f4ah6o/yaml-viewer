@@ -45,12 +45,13 @@ export function JobNode({ data }: NodeProps<JobNodeData>) {
         minWidth: "180px",
         fontSize: "14px",
         boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+        transition: "background 0.3s ease, border-color 0.3s ease, color 0.3s ease",
       }}
     >
       <Handle
         type="target"
         position={Position.Top}
-        style={{ background: colors.handle }}
+        style={{ background: colors.handle, transition: "background 0.3s ease" }}
       />
       <div style={{ fontWeight: 600, marginBottom: "8px" }}>
         {data.name}
@@ -77,7 +78,7 @@ export function JobNode({ data }: NodeProps<JobNodeData>) {
       <Handle
         type="source"
         position={Position.Bottom}
-        style={{ background: colors.handle }}
+        style={{ background: colors.handle, transition: "background 0.3s ease" }}
       />
     </div>
   );

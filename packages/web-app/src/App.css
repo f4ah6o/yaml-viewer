@@ -5,17 +5,20 @@
 .hljs {
   background: #002b36 !important;
   color: #839496 !important;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .hljs-comment,
 .hljs-quote {
   color: #586e75 !important;
+  transition: color 0.3s ease;
 }
 
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-subst {
   color: #859900 !important;
+  transition: color 0.3s ease;
 }
 
 .hljs-number,
@@ -24,55 +27,66 @@
 .hljs-template-variable,
 .hljs-tag .hljs-attr {
   color: #2aa198 !important;
+  transition: color 0.3s ease;
 }
 
 .hljs-string,
 .hljs-doctag {
   color: #2aa198 !important;
+  transition: color 0.3s ease;
 }
 
 .hljs-title,
 .hljs-section,
 .hljs-selector-id {
   color: #b58900 !important;
+  transition: color 0.3s ease;
 }
 
 .hljs-type,
 .hljs-class .hljs-title {
   color: #cb4b16 !important;
+  transition: color 0.3s ease;
 }
 
 .hljs-tag,
 .hljs-name,
 .hljs-attribute {
   color: #268bd2 !important;
+  transition: color 0.3s ease;
 }
 
 .hljs-regexp,
 .hljs-link {
   color: #2aa198 !important;
+  transition: color 0.3s ease;
 }
 
 .hljs-symbol,
 .hljs-bullet {
   color: #cb4b16 !important;
+  transition: color 0.3s ease;
 }
 
 .hljs-built_in,
 .hljs-builtin-name {
   color: #cb4b16 !important;
+  transition: color 0.3s ease;
 }
 
 .hljs-meta {
   color: #859900 !important;
+  transition: color 0.3s ease;
 }
 
 .hljs-deletion {
   background: #dc322f !important;
+  transition: background 0.3s ease;
 }
 
 .hljs-addition {
   background: #2aa198 !important;
+  transition: background 0.3s ease;
 }
 
 .hljs-emphasis {

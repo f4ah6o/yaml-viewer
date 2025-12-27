@@ -66,13 +66,14 @@ export function WorkflowGraph({ graph, className, theme }: WorkflowGraphProps) {
       nodeTypes={nodeTypes}
       fitView
       className={className}
-      style={{ background: colors.bg }}
+      style={{ background: colors.bg, transition: "background 0.3s ease" }}
     >
       <Background
         variant={BackgroundVariant.Dots}
         gap={16}
         size={1}
         color={colors.dot}
+        style={{ transition: "background 0.3s ease" }}
       />
       <Controls />
     </ReactFlow>
