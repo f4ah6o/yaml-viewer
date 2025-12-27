@@ -2,10 +2,36 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { WorkflowGraph } from "@yamlviz/ui";
 import { yamlToGraph } from "@yamlviz/core";
 import hljs from "highlight.js/lib/core";
-import yaml from "highlight.js/lib/languages/yaml";
-import "highlight.js/styles/github.css";
+import yamlLang from "highlight.js/lib/languages/yaml";
+import "highlight.js/styles/github-dark.css";
+import "./App.css";
 
-hljs.registerLanguage("yaml", yaml);
+hljs.registerLanguage("yaml", yamlLang);
+
+type Theme = "dark" | "light";
+
+const THEME_STYLES = {
+  dark: {
+    bg: "#002b36",
+    headerBg: "#073642",
+    headerText: "#839496",
+    border: "#586e75",
+    inputBg: "#002b36",
+    inputText: "#839496",
+    caret: "#839496",
+    placeholder: "#586e75",
+  },
+  light: {
+    bg: "#fdf6e3",
+    headerBg: "#eee8d5",
+    headerText: "#657b83",
+    border: "#93a1a1",
+    inputBg: "#fdf6e3",
+    inputText: "#657b83",
+    caret: "#657b83",
+    placeholder: "#93a1a1",
+  },
+};
 
 const SAMPLE_YAML = `name: CI
 on: push
@@ -39,12 +65,20 @@ function highlightYaml(code: string): string {
 
 export function App() {
   const [yaml, setYaml] = useState(SAMPLE_YAML);
+  const [theme, setTheme] = useState<Theme>("dark");
   const [error, setError] = useState<string | null>(null);
   const [highlighted, setHighlighted] = useState<string>("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
 
   const graph = yamlToGraph(yaml);
+  const styles = THEME_STYLES[theme];
+
+  // テーマ切り替え時にdocumentにクラスを追加
+  useEffect(() => {
+    document.documentElement.classList.remove("theme-dark", "theme-light");
+    document.documentElement.classList.add(`theme-${theme}`);
+  }, [theme]);
 
   useEffect(() => {
     setHighlighted(highlightYaml(yaml));
@@ -75,59 +109,81 @@ export function App() {
     reader.readAsText(file);
   };
 
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
+
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: styles.bg }}>
       <header
         style={{
           padding: "12px 20px",
-          background: "#f6f8fa",
-          borderBottom: "1px solid #d0d7de",
+          background: styles.headerBg,
+          borderBottom: `1px solid ${styles.border}`,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
         }}
       >
-        <h1 style={{ margin: 0, fontSize: "18px", color: "#24292f" }}>
+        <h1 style={{ margin: 0, fontSize: "18px", color: styles.headerText }}>
           YAMLViz - GitHub Workflow Visualizer
         </h1>
-        <label>
-          <input
-            type="file"
-            accept=".yaml,.yml"
-            style={{ display: "none" }}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleFileLoad(file);
-            }}
-          />
+        <div style={{ display: "flex", gap: "8px" }}>
           <button
             type="button"
-            onClick={() => {
-              const input = document.querySelector(
-                'input[type="file"]',
-              ) as HTMLInputElement;
-              input?.click();
-            }}
+            onClick={toggleTheme}
             style={{
               padding: "8px 16px",
               borderRadius: "6px",
-              border: "none",
-              background: "#3b82f6",
-              color: "white",
+              border: `1px solid ${styles.border}`,
+              background: styles.bg,
+              color: styles.headerText,
               cursor: "pointer",
               fontSize: "14px",
             }}
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
           >
-            Open YAML
+            {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
           </button>
-        </label>
+          <label>
+            <input
+              type="file"
+              accept=".yaml,.yml"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFileLoad(file);
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const input = document.querySelector(
+                  'input[type="file"]',
+                ) as HTMLInputElement;
+                input?.click();
+              }}
+              style={{
+                padding: "8px 16px",
+                borderRadius: "6px",
+                border: "none",
+                background: theme === "dark" ? "#2aa198" : "#268bd2",
+                color: theme === "dark" ? "#fdf6e3" : "#ffffff",
+                cursor: "pointer",
+                fontSize: "14px",
+              }}
+            >
+              Open YAML
+            </button>
+          </label>
+        </div>
       </header>
 
       <div style={{ flex: 1, display: "flex" }}>
         <div
           style={{
             width: "400px",
-            borderRight: "1px solid #d0d7de",
+            borderRight: `1px solid ${styles.border}`,
             display: "flex",
             flexDirection: "column",
           }}
@@ -135,10 +191,10 @@ export function App() {
           <div
             style={{
               padding: "8px 12px",
-              background: "#f6f8fa",
-              borderBottom: "1px solid #d0d7de",
+              background: styles.headerBg,
+              borderBottom: `1px solid ${styles.border}`,
               fontSize: "12px",
-              color: "#57606a",
+              color: styles.inputText,
             }}
           >
             YAML Input
@@ -160,13 +216,13 @@ export function App() {
                 bottom: 0,
                 margin: 0,
                 padding: "16px",
-                background: "#ffffff",
+                background: styles.inputBg,
                 pointerEvents: "none",
                 overflow: "auto",
               }}
             >
               <code
-                style={{ fontFamily: "ui-monospace, monospace", fontSize: "13px" }}
+                style={{ fontFamily: "ui-monospace, monospace", fontSize: "13px", color: styles.inputText }}
                 dangerouslySetInnerHTML={{ __html: highlighted }}
               />
             </pre>
@@ -185,7 +241,7 @@ export function App() {
                 border: "none",
                 background: "transparent",
                 color: "transparent",
-                caretColor: "#24292f",
+                caretColor: styles.caret,
                 fontFamily: "ui-monospace, monospace",
                 fontSize: "13px",
                 lineHeight: "1.5",
@@ -199,7 +255,7 @@ export function App() {
           </div>
         </div>
 
-        <div style={{ flex: 1, position: "relative" }}>
+        <div style={{ flex: 1, position: "relative", background: styles.bg }}>
           {error ? (
             <div
               style={{
@@ -208,16 +264,16 @@ export function App() {
                 left: "50%",
                 transform: "translate(-50%, -50%)",
                 padding: "20px",
-                background: "#1e293b",
+                background: styles.headerBg,
                 borderRadius: "8px",
-                border: "1px solid #ef4444",
-                color: "#ef4444",
+                border: "1px solid #dc322f",
+                color: "#dc322f",
               }}
             >
               {error}
             </div>
           ) : graph && graph.nodes.length > 0 ? (
-            <WorkflowGraph graph={graph} />
+            <WorkflowGraph graph={graph} theme={theme} />
           ) : (
             <div
               style={{
@@ -225,7 +281,7 @@ export function App() {
                 top: "50%",
                 left: "50%",
                 transform: "translate(-50%, -50%)",
-                color: "#64748b",
+                color: styles.inputText,
                 fontSize: "14px",
               }}
             >

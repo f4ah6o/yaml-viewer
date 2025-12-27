@@ -53,6 +53,7 @@ export interface JobNodeData {
   runsOn?: string | string[];
   needs: string[];
   stepCount: number;
+  theme?: "dark" | "light";
 }
 
 export interface GraphEdge {

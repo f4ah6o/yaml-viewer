@@ -1,0 +1,158 @@
+/* Solarized theme for syntax highlighting */
+/* Based on Solarized color palette */
+
+/* Dark theme (default) */
+.hljs {
+  background: #002b36 !important;
+  color: #839496 !important;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #586e75 !important;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-subst {
+  color: #859900 !important;
+}
+
+.hljs-number,
+.hljs-literal,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag .hljs-attr {
+  color: #2aa198 !important;
+}
+
+.hljs-string,
+.hljs-doctag {
+  color: #2aa198 !important;
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-selector-id {
+  color: #b58900 !important;
+}
+
+.hljs-type,
+.hljs-class .hljs-title {
+  color: #cb4b16 !important;
+}
+
+.hljs-tag,
+.hljs-name,
+.hljs-attribute {
+  color: #268bd2 !important;
+}
+
+.hljs-regexp,
+.hljs-link {
+  color: #2aa198 !important;
+}
+
+.hljs-symbol,
+.hljs-bullet {
+  color: #cb4b16 !important;
+}
+
+.hljs-built_in,
+.hljs-builtin-name {
+  color: #cb4b16 !important;
+}
+
+.hljs-meta {
+  color: #859900 !important;
+}
+
+.hljs-deletion {
+  background: #dc322f !important;
+}
+
+.hljs-addition {
+  background: #2aa198 !important;
+}
+
+.hljs-emphasis {
+  font-style: italic !important;
+}
+
+.hljs-strong {
+  font-weight: bold !important;
+}
+
+/* Light theme overrides */
+.theme-light .hljs {
+  background: #fdf6e3 !important;
+  color: #657b83 !important;
+}
+
+.theme-light .hljs-comment,
+.theme-light .hljs-quote {
+  color: #93a1a1 !important;
+}
+
+.theme-light .hljs-keyword,
+.theme-light .hljs-selector-tag,
+.theme-light .hljs-subst {
+  color: #859900 !important;
+}
+
+.theme-light .hljs-number,
+.theme-light .hljs-literal,
+.theme-light .hljs-variable,
+.theme-light .hljs-template-variable,
+.theme-light .hljs-tag .hljs-attr {
+  color: #2aa198 !important;
+}
+
+.theme-light .hljs-string,
+.theme-light .hljs-doctag {
+  color: #268bd2 !important;
+}
+
+.theme-light .hljs-title,
+.theme-light .hljs-section,
+.theme-light .hljs-selector-id {
+  color: #b58900 !important;
+}
+
+.theme-light .hljs-type,
+.theme-light .hljs-class .hljs-title {
+  color: #cb4b16 !important;
+}
+
+.theme-light .hljs-tag,
+.theme-light .hljs-name,
+.theme-light .hljs-attribute {
+  color: #268bd2 !important;
+}
+
+.theme-light .hljs-regexp,
+.theme-light .hljs-link {
+  color: #2aa198 !important;
+}
+
+.theme-light .hljs-symbol,
+.theme-light .hljs-bullet {
+  color: #cb4b16 !important;
+}
+
+.theme-light .hljs-built_in,
+.theme-light .hljs-builtin-name {
+  color: #cb4b16 !important;
+}
+
+.theme-light .hljs-meta {
+  color: #859900 !important;
+}
+
+.theme-light .hljs-deletion {
+  background: #dc322f !important;
+}
+
+.theme-light .hljs-addition {
+  background: #2aa198 !important;
+}

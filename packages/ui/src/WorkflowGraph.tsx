@@ -23,14 +23,30 @@ const nodeTypes = {
 interface WorkflowGraphProps {
   graph: WorkflowGraph;
   className?: string;
+  theme: "dark" | "light";
 }
 
-export function WorkflowGraph({ graph, className }: WorkflowGraphProps) {
+const SOLARIZED = {
+  dark: {
+    bg: "#002b36",
+    dot: "#586e75",
+    edge: "#2aa198",
+  },
+  light: {
+    bg: "#fdf6e3",
+    dot: "#93a1a1",
+    edge: "#268bd2",
+  },
+};
+
+export function WorkflowGraph({ graph, className, theme }: WorkflowGraphProps) {
+  const colors = SOLARIZED[theme];
+
   const nodes: Node[] = graph.nodes.map((n) => ({
     id: n.id,
     type: n.type,
     position: n.position || { x: 0, y: 0 },
-    data: n.data,
+    data: { ...n.data, theme },
   }));
 
   const edges: Edge[] = graph.edges.map((e) => ({
@@ -39,7 +55,8 @@ export function WorkflowGraph({ graph, className }: WorkflowGraphProps) {
     target: e.target,
     label: e.label,
     animated: true,
-    style: { stroke: "#3b82f6", strokeWidth: 2 },
+    style: { stroke: colors.edge, strokeWidth: 2 },
+    labelStyle: { fill: colors.edge, fontSize: 10 },
   }));
 
   return (
@@ -49,13 +66,13 @@ export function WorkflowGraph({ graph, className }: WorkflowGraphProps) {
       nodeTypes={nodeTypes}
       fitView
       className={className}
-      style={{ background: "#ffffff" }}
+      style={{ background: colors.bg }}
     >
       <Background
         variant={BackgroundVariant.Dots}
         gap={16}
         size={1}
-        color="#d0d7de"
+        color={colors.dot}
       />
       <Controls />
     </ReactFlow>
