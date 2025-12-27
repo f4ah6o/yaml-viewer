@@ -44,6 +44,8 @@ export function App() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
 
+  const graph = yamlToGraph(yaml);
+
   useEffect(() => {
     setHighlighted(highlightYaml(yaml));
   }, []);
