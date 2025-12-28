@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { WorkflowGraph, StepDetailPanel } from "@yamlviz/ui";
-import { yamlToGraph } from "@yamlviz/core";
+import { WorkflowGraph, StepDetailPanel, ActionModal } from "@yamlviz/ui";
+import { yamlToGraph, fetchActionMetadata } from "@yamlviz/core";
 import hljs from "highlight.js/lib/core";
 import yamlLang from "highlight.js/lib/languages/yaml";
 import "highlight.js/styles/github-dark.css";
@@ -69,6 +69,19 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [highlighted, setHighlighted] = useState<string>("");
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  // Action Modal 状態
+  const [actionModal, setActionModal] = useState<{
+    action: string;
+    metadata: import("@yamlviz/core").ActionMetadata | null;
+    loading: boolean;
+    error: string | null;
+  } | null>(null);
+  // GitHub Token
+  const [githubToken, setGithubToken] = useState<string>("");
+  const [showTokenInput, setShowTokenInput] = useState(false);
+  // キャッシュ
+  const actionCache = useRef<Map<string, import("@yamlviz/core").ActionMetadata>>(new Map());
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
 
@@ -114,6 +127,55 @@ export function App() {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
+  const handleActionClick = useCallback(async (action: string) => {
+    // キャッシュチェック
+    const cached = actionCache.current.get(action);
+    if (cached) {
+      setActionModal({
+        action,
+        metadata: cached,
+        loading: false,
+        error: null,
+      });
+      return;
+    }
+
+    // モーダルを開く（ローディング状態）
+    setActionModal({
+      action,
+      metadata: null,
+      loading: true,
+      error: null,
+    });
+
+    try {
+      const metadata = await fetchActionMetadata(action, githubToken || undefined);
+      if (metadata) {
+        actionCache.current.set(action, metadata);
+        setActionModal({
+          action,
+          metadata,
+          loading: false,
+          error: null,
+        });
+      } else {
+        setActionModal({
+          action,
+          metadata: null,
+          loading: false,
+          error: "Action not found",
+        });
+      }
+    } catch (e) {
+      setActionModal({
+        action,
+        metadata: null,
+        loading: false,
+        error: e instanceof Error ? e.message : "Failed to fetch action metadata",
+      });
+    }
+  }, [githubToken]);
+
   const handleNodeClick = (nodeId: string) => {
     setSelectedNodeId(nodeId);
   };
@@ -139,6 +201,23 @@ export function App() {
           YAMLViz - GitHub Workflow Visualizer
         </h1>
         <div style={{ display: "flex", gap: "8px" }}>
+          <button
+            type="button"
+            onClick={() => setShowTokenInput(!showTokenInput)}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "6px",
+              border: `1px solid ${styles.border}`,
+              background: styles.bg,
+              color: styles.headerText,
+              cursor: "pointer",
+              fontSize: "14px",
+              transition: "background 0.3s ease, border-color 0.3s ease, color 0.3s ease",
+            }}
+            title="Set GitHub Token for higher rate limit"
+          >
+            🔑 Token
+          </button>
           <button
             type="button"
             onClick={toggleTheme}
@@ -190,6 +269,42 @@ export function App() {
           </label>
         </div>
       </header>
+
+      {/* GitHub Token Input */}
+      {showTokenInput && (
+        <div
+          style={{
+            padding: "8px 20px",
+            background: styles.headerBg,
+            borderBottom: `1px solid ${styles.border}`,
+            display: "flex",
+            gap: "8px",
+            alignItems: "center",
+            transition: "background 0.3s ease, border-color 0.3s ease",
+          }}
+        >
+          <span style={{ color: styles.headerText, fontSize: "12px" }}>GitHub Token:</span>
+          <input
+            type="password"
+            value={githubToken}
+            onChange={(e) => setGithubToken(e.target.value)}
+            placeholder="ghp_... (optional)"
+            style={{
+              padding: "4px 8px",
+              borderRadius: "4px",
+              border: `1px solid ${styles.border}`,
+              background: styles.inputBg,
+              color: styles.inputText,
+              fontSize: "12px",
+              flex: 1,
+              maxWidth: "300px",
+            }}
+          />
+          <span style={{ color: styles.subtext, fontSize: "11px" }}>
+            {githubToken ? "5000 req/h" : "60 req/h"}
+          </span>
+        </div>
+      )}
 
       <div style={{ flex: 1, display: "flex" }}>
         <div
@@ -392,7 +507,7 @@ export function App() {
                 )}
               </div>
               {selectedNode.data.steps && selectedNode.data.steps.length > 0 ? (
-                <StepDetailPanel steps={selectedNode.data.steps} theme={theme} />
+                <StepDetailPanel steps={selectedNode.data.steps} theme={theme} onActionClick={handleActionClick} />
               ) : (
                 <div
                   style={{
@@ -410,6 +525,18 @@ export function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Action Modal */}
+      {actionModal && (
+        <ActionModal
+          action={actionModal.action}
+          metadata={actionModal.metadata}
+          loading={actionModal.loading}
+          error={actionModal.error}
+          theme={theme}
+          onClose={() => setActionModal(null)}
+        />
       )}
     </div>
   );

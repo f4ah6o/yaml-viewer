@@ -7,6 +7,7 @@
 export * from "./types";
 export { parseYaml } from "./parser";
 export { transformWorkflowToGraph, calculateLayout } from "./transformer";
+export * from "./actionApi";
 
 /**
  * YAML文字列からグラフを生成（ユーティリティ）

@@ -7,3 +7,4 @@
 export { JobNode } from "./JobNode";
 export { WorkflowGraph } from "./WorkflowGraph";
 export { StepDetailPanel } from "./StepDetailPanel";
+export { ActionModal } from "./ActionModal";

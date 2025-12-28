@@ -5,6 +5,7 @@
  */
 
 import type { Step } from "@yamlviz/core";
+import { isValidActionRef } from "@yamlviz/core";
 
 const SOLARIZED = {
   dark: {
@@ -28,6 +29,7 @@ const SOLARIZED = {
 interface StepDetailPanelProps {
   steps: Step[];
   theme: "dark" | "light";
+  onActionClick?: (action: string) => void;
 }
 
 // アクション名からアイコンを取得
@@ -65,7 +67,7 @@ function shortenCommand(run: string): string {
   return trimmed;
 }
 
-export function StepDetailPanel({ steps, theme }: StepDetailPanelProps) {
+export function StepDetailPanel({ steps, theme, onActionClick }: StepDetailPanelProps) {
   const colors = SOLARIZED[theme];
 
   if (!steps || steps.length === 0) {
@@ -110,6 +112,7 @@ export function StepDetailPanel({ steps, theme }: StepDetailPanelProps) {
         {steps.map((step, index) => {
           if (step.uses) {
             const { color } = getActionIcon(step.uses);
+            const isClickable = onActionClick && isValidActionRef(step.uses);
             return (
               <div
                 key={step.id || index}
@@ -141,7 +144,14 @@ export function StepDetailPanel({ steps, theme }: StepDetailPanelProps) {
                   {step.uses.startsWith("docker/") && "D"}
                 </span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ color: colors.text, fontWeight: 500 }}>
+                  <div
+                    style={{
+                      color: colors.text,
+                      fontWeight: 500,
+                      cursor: isClickable ? "pointer" : undefined,
+                    }}
+                    onClick={() => isClickable && onActionClick!(step.uses!)}
+                  >
                     {step.name || shortenAction(step.uses)}
                   </div>
                   <div style={{ color: colors.subtext, fontSize: "11px" }}>

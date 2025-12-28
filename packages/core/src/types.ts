@@ -77,3 +77,22 @@ export interface ParseError {
 export type ParseResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: ParseError };
+
+/**
+ * GitHub Action メタデータ
+ */
+
+export interface ActionMetadata {
+  name: string;
+  owner: string;
+  description: string;
+  url: string;
+  stars: number;
+  version?: string;
+}
+
+export interface ActionRef {
+  owner: string;
+  repo: string;
+  version?: string;
+}
