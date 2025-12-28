@@ -24,6 +24,7 @@ interface WorkflowGraphProps {
   graph: WorkflowGraph;
   className?: string;
   theme: "dark" | "light";
+  onNodeClick?: (nodeId: string) => void;
 }
 
 const SOLARIZED = {
@@ -39,7 +40,7 @@ const SOLARIZED = {
   },
 };
 
-export function WorkflowGraph({ graph, className, theme }: WorkflowGraphProps) {
+export function WorkflowGraph({ graph, className, theme, onNodeClick }: WorkflowGraphProps) {
   const colors = SOLARIZED[theme];
 
   const nodes: Node[] = graph.nodes.map((n) => ({
@@ -64,6 +65,7 @@ export function WorkflowGraph({ graph, className, theme }: WorkflowGraphProps) {
       nodes={nodes}
       edges={edges}
       nodeTypes={nodeTypes}
+      onNodeClick={(e, node) => onNodeClick?.(node.id)}
       fitView
       className={className}
       style={{ background: colors.bg, transition: "background 0.3s ease" }}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { WorkflowGraph } from "@yamlviz/ui";
+import { WorkflowGraph, StepDetailPanel } from "@yamlviz/ui";
 import { yamlToGraph } from "@yamlviz/core";
 import hljs from "highlight.js/lib/core";
 import yamlLang from "highlight.js/lib/languages/yaml";
@@ -68,6 +68,7 @@ export function App() {
   const [theme, setTheme] = useState<Theme>("dark");
   const [error, setError] = useState<string | null>(null);
   const [highlighted, setHighlighted] = useState<string>("");
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
 
@@ -112,6 +113,14 @@ export function App() {
   const toggleTheme = () => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
+
+  const handleNodeClick = (nodeId: string) => {
+    setSelectedNodeId(nodeId);
+  };
+
+  const selectedNode = selectedNodeId
+    ? graph?.nodes.find((n) => n.id === selectedNodeId)
+    : null;
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: styles.bg, transition: "background 0.3s ease" }}>
@@ -281,7 +290,7 @@ export function App() {
               {error}
             </div>
           ) : graph && graph.nodes.length > 0 ? (
-            <WorkflowGraph graph={graph} theme={theme} />
+            <WorkflowGraph graph={graph} theme={theme} onNodeClick={handleNodeClick} />
           ) : (
             <div
               style={{
@@ -299,6 +308,109 @@ export function App() {
           )}
         </div>
       </div>
+
+      {/* モーダル */}
+      {selectedNode && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={() => setSelectedNodeId(null)}
+        >
+          <div
+            style={{
+              background: styles.headerBg,
+              borderRadius: "12px",
+              border: `1px solid ${styles.border}`,
+              maxWidth: "500px",
+              width: "90%",
+              maxHeight: "80vh",
+              overflow: "auto",
+              boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)",
+              transition: "background 0.3s ease, border-color 0.3s ease",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                padding: "16px 20px",
+                borderBottom: `1px solid ${styles.border}`,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                transition: "border-color 0.3s ease",
+              }}
+            >
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: "18px",
+                  color: styles.headerText,
+                  transition: "color 0.3s ease",
+                }}
+              >
+                {selectedNode.data.name || selectedNode.id}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setSelectedNodeId(null)}
+                style={{
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  border: "none",
+                  background: "transparent",
+                  color: styles.headerText,
+                  cursor: "pointer",
+                  fontSize: "18px",
+                  transition: "color 0.3s ease",
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div style={{ padding: "16px" }}>
+              <div
+                style={{
+                  marginBottom: "16px",
+                  fontSize: "14px",
+                  color: styles.inputText,
+                  transition: "color 0.3s ease",
+                }}
+              >
+                <div>runs-on: {Array.isArray(selectedNode.data.runsOn) ? selectedNode.data.runsOn.join(", ") : selectedNode.data.runsOn}</div>
+                {selectedNode.data.needs && selectedNode.data.needs.length > 0 && (
+                  <div>needs: {selectedNode.data.needs.join(", ")}</div>
+                )}
+              </div>
+              {selectedNode.data.steps && selectedNode.data.steps.length > 0 ? (
+                <StepDetailPanel steps={selectedNode.data.steps} theme={theme} />
+              ) : (
+                <div
+                  style={{
+                    padding: "12px 16px",
+                    borderRadius: "8px",
+                    background: styles.inputBg,
+                    color: styles.inputText,
+                    fontSize: "14px",
+                    transition: "background 0.3s ease, color 0.3s ease",
+                  }}
+                >
+                  No steps
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
