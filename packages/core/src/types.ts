@@ -55,6 +55,8 @@ export interface JobNodeData {
   stepCount: number;
   theme?: "dark" | "light";
   steps?: Step[];
+  validationStatus?: "valid" | "warning" | "error";
+  validationIssues?: ValidationIssue[];
 }
 
 export interface GraphEdge {
@@ -95,4 +97,32 @@ export interface ActionRef {
   owner: string;
   repo: string;
   version?: string;
+}
+
+/**
+ * wrkflw 検証・実行関連の型
+ */
+
+export interface ValidationIssue {
+  severity: "error" | "warning";
+  message: string;
+  line?: number;
+  column?: number;
+  jobId?: string;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  issues: ValidationIssue[];
+}
+
+export interface ExecutionEvent {
+  type: "workflow_start" | "workflow_complete" | "job_start" | "job_complete" | "step_complete";
+  path?: string;
+  runtime?: string;
+  jobId?: string;
+  stepIndex?: number;
+  stepName?: string;
+  status?: string;
+  success?: boolean;
 }

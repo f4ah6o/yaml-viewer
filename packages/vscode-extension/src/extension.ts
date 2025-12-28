@@ -5,13 +5,17 @@
  */
 
 import * as vscode from "vscode";
+import * as cp from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(cp.exec);
 
 let currentPanel: vscode.WebviewPanel | undefined = undefined;
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("YAMLViz extension is now active!");
 
-  // コマンド登録
+  // コマンド登録: グラフ表示
   const showGraphCommand = vscode.commands.registerCommand(
     "yamlviz.showGraph",
     () => {
@@ -19,7 +23,25 @@ export function activate(context: vscode.ExtensionContext) {
     },
   );
 
+  // コマンド登録: ワークフロー検証
+  const validateWorkflowCommand = vscode.commands.registerCommand(
+    "yamlviz.validateWorkflow",
+    async () => {
+      await validateWorkflow();
+    },
+  );
+
+  // コマンド登録: ワークフロー実行
+  const runWorkflowCommand = vscode.commands.registerCommand(
+    "yamlviz.runWorkflow",
+    () => {
+      runWorkflow();
+    },
+  );
+
   context.subscriptions.push(showGraphCommand);
+  context.subscriptions.push(validateWorkflowCommand);
+  context.subscriptions.push(runWorkflowCommand);
 
   // アクティブエディタが変更されたときに自動表示（オプション）
   const editorChangeListener = vscode.window.onDidChangeActiveTextEditor(
@@ -316,6 +338,84 @@ function getWebviewContent(): string {
   </script>
 </body>
 </html>`;
+}
+
+/**
+ * ワークフロー検証（wrkflw CLIを使用）
+ */
+async function validateWorkflow(): Promise<void> {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showWarningMessage("No active editor");
+    return;
+  }
+
+  const filePath = editor.document.fileName;
+
+  if (!filePath.endsWith(".yaml")) {
+    vscode.window.showWarningMessage("Please open a .yaml file to validate");
+    return;
+  }
+
+  await vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: "Validating workflow...",
+      cancellable: false,
+    },
+    async () => {
+      try {
+        const { stdout } = await execAsync(`wrkflw validate "${filePath}" --json`);
+        const results = JSON.parse(stdout);
+
+        if (Array.isArray(results) && results.length === 1) {
+          const [result] = results;
+          if (result.isValid) {
+            vscode.window.showInformationMessage("✅ Workflow is valid!");
+          } else {
+            const issues = result.issues || [];
+            const message = `❌ Validation failed: ${issues.length} issue(s)`;
+            vscode.window.showErrorMessage(message);
+            issues.forEach((issue: any) => {
+              vscode.window.showWarningMessage(`  - ${issue.message}`);
+            });
+          }
+        }
+      } catch (error: any) {
+        const errorMessage = error.stderr || error.message || "Unknown error";
+        if (errorMessage.includes("command not found") || errorMessage.includes("not found")) {
+          vscode.window.showErrorMessage(
+            "wrkflw CLI not found. Please install wrkflw: https://github.com/fu2hito/wrkflw"
+          );
+        } else {
+          vscode.window.showErrorMessage(`Validation failed: ${errorMessage}`);
+        }
+      }
+    }
+  );
+}
+
+/**
+ * ワークフロー実行（wrkflw CLIを使用）
+ */
+function runWorkflow(): void {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showWarningMessage("No active editor");
+    return;
+  }
+
+  const filePath = editor.document.fileName;
+
+  if (!filePath.endsWith(".yaml")) {
+    vscode.window.showWarningMessage("Please open a .yaml file to run");
+    return;
+  }
+
+  // 統合ターミナルでwrkflwを実行
+  const terminal = vscode.window.createTerminal("wrkflw");
+  terminal.sendText(`wrkflw run "${filePath}"`);
+  terminal.show();
 }
 
 export function deactivate() {

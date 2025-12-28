@@ -22,17 +22,29 @@ const SOLARIZED = {
   },
 };
 
+const VALIDATION_COLORS = {
+  valid: "#4ec9b0",
+  warning: "#ffab00",
+  error: "#f14c4c",
+};
+
 interface JobNodeData {
   name?: string;
   runsOn?: string | string[];
   needs: string[];
   stepCount: number;
   theme?: "dark" | "light";
+  validationStatus?: "valid" | "warning" | "error";
 }
 
 export function JobNode({ data }: NodeProps<JobNodeData>) {
   const theme = data.theme || "dark";
   const colors = SOLARIZED[theme];
+
+  const borderColor =
+    data.validationStatus && VALIDATION_COLORS[data.validationStatus]
+      ? VALIDATION_COLORS[data.validationStatus]
+      : colors.border;
 
   return (
     <div style={{ position: "relative" }}>
@@ -40,7 +52,7 @@ export function JobNode({ data }: NodeProps<JobNodeData>) {
         style={{
           padding: "12px 16px",
           borderRadius: "8px",
-          border: `2px solid ${colors.border}`,
+          border: `2px solid ${borderColor}`,
           background: colors.bg,
           color: colors.text,
           minWidth: "180px",
@@ -53,10 +65,24 @@ export function JobNode({ data }: NodeProps<JobNodeData>) {
         <Handle
           type="target"
           position={Position.Top}
-          style={{ background: colors.handle, transition: "background 0.3s ease" }}
+          style={{ background: borderColor, transition: "background 0.3s ease" }}
         />
-        <div style={{ fontWeight: 600, marginBottom: "8px" }}>
-          {data.name}
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={{ fontWeight: 600, marginBottom: "8px", flex: 1 }}>
+            {data.name}
+          </div>
+          {data.validationStatus && data.validationStatus !== "valid" && (
+            <div
+              style={{
+                width: "10px",
+                height: "10px",
+                borderRadius: "50%",
+                backgroundColor: VALIDATION_COLORS[data.validationStatus],
+                flexShrink: 0,
+              }}
+              title={`Validation ${data.validationStatus}`}
+            />
+          )}
         </div>
         <div
           style={{
@@ -80,7 +106,7 @@ export function JobNode({ data }: NodeProps<JobNodeData>) {
         <Handle
           type="source"
           position={Position.Bottom}
-          style={{ background: colors.handle, transition: "background 0.3s ease" }}
+          style={{ background: borderColor, transition: "background 0.3s ease" }}
         />
       </div>
     </div>
