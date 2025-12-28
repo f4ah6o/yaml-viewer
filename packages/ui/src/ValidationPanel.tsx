@@ -100,7 +100,7 @@ const getStyles = (theme: "dark" | "light") => {
       gap: "8px",
       padding: "6px 8px",
       borderRadius: "4px",
-      cursor: onIssueClick => "pointer" : "default",
+      cursor: onIssueClick ? "pointer" : "default",
       transition: "background-color 0.15s ease",
       "&:hover": {
         backgroundColor: colors.hoverBg,
