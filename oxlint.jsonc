@@ -1,0 +1,17 @@
+{
+  "$schema": "https://oxc-project.github.io/oxc-schema/oxlint.json",
+  "categories": {
+    "correctness": "warn",
+    "suspicious": "warn",
+    "perf": "warn",
+    "style": "warn",
+    "pedantic": "off"
+  },
+  "ignore": [
+    "node_modules",
+    "dist",
+    "out",
+    ".vscode-test",
+    "build"
+  ]
+}
