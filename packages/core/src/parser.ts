@@ -33,65 +33,13 @@ function isEntry(v: unknown): v is YamlEntry {
  * 値が配列項目型かチェック
  */
 function isArrayItem(v: unknown): v is YamlArrayItem {
-  return typeof v === "object" && v !== null && "_0" in v && "_1" in v;
-}
-
-/**
- * 配列の中に「はみ出した」エントリがないかチェックして修正
- *
- * yyjjのCSTパーサーには、同じインデントレベルのマッピングエントリが
- * 配列の中にネストしてしまうバグがあります。
- * 例: jobs: の下の build, lint が同じ配列に入ってしまう
- */
-function fixNestedEntries(
-  items: unknown[],
-  parentKey: string
-): { fixed: unknown[]; extra: unknown[] } {
-  const fixed: unknown[] = [];
-  const extra: unknown[] = [];
-
-  for (const item of items) {
-    if (!isEntry(item)) {
-      fixed.push(item);
-      continue;
-    }
-
-    const key = item.key._0 as string;
-    const value = item.value;
-
-    // 値が配列の場合、その中に「はみ出した」エントリがないかチェック
-    if (Array.isArray(value._0)) {
-      const subItems = value._0;
-      const lastIdx = subItems.length - 1;
-
-      // 最後の要素がエントリ型で、かつ最初の要素と同じレベルに見える場合
-      if (lastIdx >= 0 && isEntry(subItems[lastIdx])) {
-        const lastEntry = subItems[lastIdx] as YamlEntry;
-        const lastKey = lastEntry.key._0 as string;
-
-        // jobsの特殊ケース: 値が配列項目型ではなく、値として配列を持つ場合は
-        // 配列の最後のエントリは実は兄弟である可能性が高い
-        if (parentKey === "jobs" && !isArrayItem(value)) {
-          // 配列の最後のエントリを取り出して、extraに追加
-          const newSubItems = subItems.slice(0, lastIdx);
-          const newEntry = { ...item, value: { ...value, _0: newSubItems } };
-          fixed.push(newEntry);
-          extra.push(lastEntry);
-          continue;
-        }
-      }
-    }
-
-    fixed.push(item);
-  }
-
-  return { fixed, extra };
+  return typeof v === "object" && v !== null && "_0" in v && "_1" in v && "key" in (v._0?.[0] || {});
 }
 
 /**
  * CSTからJavaScriptオブジェクトに変換（再帰的）
  */
-function cstToJs(value: unknown, parentKey = ""): unknown {
+function cstToJs(value: unknown): unknown {
   if (value === null || value === undefined) {
     return null;
   }
@@ -110,23 +58,10 @@ function cstToJs(value: unknown, parentKey = ""): unknown {
 
   // _0 が配列の場合（マッピングまたは配列）
   if (Array.isArray(yamlValue._0)) {
-    let items = yamlValue._0 as unknown[];
-
-    // yyjjバグ修正: はみ出したエントリを分離
-    const { fixed, extra } = fixNestedEntries(items, parentKey);
-    items = fixed;
+    const items = yamlValue._0 as unknown[];
 
     // 空の配列
     if (items.length === 0) {
-      // extraがある場合はそれをマッピングとして処理
-      if (extra.length > 0) {
-        const obj: Record<string, unknown> = {};
-        for (const entry of extra as YamlEntry[]) {
-          const key = cstToJs(entry.key._0) as string;
-          obj[key] = cstToJs(entry.value, key);
-        }
-        return obj;
-      }
       return [];
     }
 
@@ -137,14 +72,7 @@ function cstToJs(value: unknown, parentKey = ""): unknown {
       const obj: Record<string, unknown> = {};
       for (const entry of items as YamlEntry[]) {
         const key = cstToJs(entry.key._0) as string;
-        obj[key] = cstToJs(entry.value, key);
-      }
-      // extraを追加
-      if (extra.length > 0) {
-        for (const entry of extra as YamlEntry[]) {
-          const key = cstToJs(entry.key._0) as string;
-          obj[key] = cstToJs(entry.value, key);
-        }
+        obj[key] = cstToJs(entry.value);
       }
       return obj;
     }
@@ -153,22 +81,22 @@ function cstToJs(value: unknown, parentKey = ""): unknown {
     if (isArrayItem(first)) {
       const arr: unknown[] = [];
       for (const item of items as YamlArrayItem[]) {
-        if (Array.isArray(item._0)) {
+        if (Array.isArray(item._0) && item._0.length > 0 && isEntry(item._0[0])) {
           const obj: Record<string, unknown> = {};
           for (const entry of item._0 as YamlEntry[]) {
             const key = cstToJs(entry.key._0) as string;
-            obj[key] = cstToJs(entry.value, key);
+            obj[key] = cstToJs(entry.value);
           }
           arr.push(obj);
         } else {
-          arr.push(cstToJs(item._0, parentKey));
+          arr.push(cstToJs(item._0));
         }
       }
       return arr;
     }
 
     // その他の配列
-    return items.map((v) => cstToJs(v, parentKey));
+    return items.map((v) => cstToJs(v));
   }
 
   return null;
