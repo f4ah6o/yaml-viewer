@@ -16,7 +16,7 @@ export function ValidationPanel({
   const errors = issues.filter((i) => i.severity === "error");
   const warnings = issues.filter((i) => i.severity === "warning");
 
-  const styles = getStyles(theme);
+  const styles = getStyles(theme, !!onIssueClick);
 
   return (
     <div css={styles.container}>
@@ -52,7 +52,7 @@ export function ValidationPanel({
   );
 }
 
-const getStyles = (theme: "dark" | "light") => {
+const getStyles = (theme: "dark" | "light", hasOnClick: boolean) => {
   const colors = theme === "dark" ? darkColors : lightColors;
   return {
     container: {
@@ -100,7 +100,7 @@ const getStyles = (theme: "dark" | "light") => {
       gap: "8px",
       padding: "6px 8px",
       borderRadius: "4px",
-      cursor: onIssueClick ? "pointer" : "default",
+      cursor: hasOnClick ? "pointer" : "default",
       transition: "background-color 0.15s ease",
       "&:hover": {
         backgroundColor: colors.hoverBg,

@@ -6,7 +6,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "yyjj": "link:../../../yyjj.mbt"
+    "yyjj": "link:../../../yyjj.mbt",
+    "wrkflw-wasm": "link:../../../wrkflw/crates/wasm/pkg"
   },
   "devDependencies": {
     "vitest": "^3.0.5"

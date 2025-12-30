@@ -8,6 +8,8 @@ export * from "./types";
 export { parseYaml } from "./parser";
 export { transformWorkflowToGraph, calculateLayout } from "./transformer";
 export * from "./actionApi";
+export * from "./wrkflw";
+export * from "./validation-mapper";
 
 /**
  * YAML文字列からグラフを生成（ユーティリティ）

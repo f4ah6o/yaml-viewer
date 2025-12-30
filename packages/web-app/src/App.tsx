@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { WorkflowGraph, StepDetailPanel, ActionModal } from "@yamlviz/ui";
-import { yamlToGraph, fetchActionMetadata } from "@yamlviz/core";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { WorkflowGraph, StepDetailPanel, ActionModal, ValidationPanel } from "@yamlviz/ui";
+import { yamlToGraph, fetchActionMetadata, initWrkflw, validateWorkflowJson, parseYaml, applyValidationToGraph, type ValidationResult } from "@yamlviz/core";
 import hljs from "highlight.js/lib/core";
 import yamlLang from "highlight.js/lib/languages/yaml";
 import "highlight.js/styles/github-dark.css";
@@ -50,6 +50,10 @@ jobs:
   test:
     needs: build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [16, 18, 20]
     steps:
       - run: npm run test:integration
   deploy:
@@ -69,6 +73,14 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [highlighted, setHighlighted] = useState<string>("");
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+
+  // WASM & Validation 状態
+  const [wasmReady, setWasmReady] = useState(false);
+  const [validationResult, setValidationResult] = useState<ValidationResult>({
+    isValid: true,
+    issues: [],
+  });
+  const [isValidating, setIsValidating] = useState(false);
   // Action Modal 状態
   const [actionModal, setActionModal] = useState<{
     action: string;
@@ -86,6 +98,10 @@ export function App() {
   const preRef = useRef<HTMLPreElement>(null);
 
   const graph = yamlToGraph(yaml);
+  const graphWithValidation = useMemo(() => {
+    if (!graph) return null;
+    return applyValidationToGraph(graph, validationResult.issues);
+  }, [graph, validationResult]);
   const styles = THEME_STYLES[theme];
 
   // テーマ切り替え時にdocumentにクラスを追加
@@ -93,6 +109,34 @@ export function App() {
     document.documentElement.classList.remove("theme-dark", "theme-light");
     document.documentElement.classList.add(`theme-${theme}`);
   }, [theme]);
+
+  // WASM初期化
+  useEffect(() => {
+    initWrkflw().then(() => setWasmReady(true)).catch(() => setWasmReady(false));
+  }, []);
+
+  // パース結果を取得
+  const parseResult = useMemo(() => parseYaml(yaml), [yaml]);
+
+  // 検証実行（デバウンス付き）
+  useEffect(() => {
+    if (!wasmReady || !parseResult.ok) return;
+
+    setIsValidating(true);
+    const timer = setTimeout(() => {
+      try {
+        const workflowJson = JSON.stringify(parseResult.data);
+        const result = validateWorkflowJson(workflowJson);
+        setValidationResult(result);
+      } catch {
+        setValidationResult({ isValid: true, issues: [] });
+      } finally {
+        setIsValidating(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [parseResult, wasmReady]);
 
   useEffect(() => {
     setHighlighted(highlightYaml(yaml));
@@ -181,7 +225,7 @@ export function App() {
   };
 
   const selectedNode = selectedNodeId
-    ? graph?.nodes.find((n) => n.id === selectedNodeId)
+    ? graphWithValidation?.nodes.find((n) => n.id === selectedNodeId)
     : null;
 
   return (
@@ -384,6 +428,24 @@ export function App() {
               placeholder="Paste your GitHub Workflow YAML here..."
             />
           </div>
+          {/* Validation Panel */}
+          <ValidationPanel
+            issues={validationResult.issues}
+            isLoading={isValidating || !wasmReady}
+            theme={theme}
+            onIssueClick={(issue) => {
+              // 行番号がある場合はスクロール
+              if (issue.line && textareaRef.current) {
+                const lines = yaml.split("\n");
+                const lineHeight = 19.68; // font-size 13px * line-height 1.5
+                const scrollTop = (issue.line - 1) * lineHeight;
+                textareaRef.current.scrollTop = scrollTop;
+                if (preRef.current) {
+                  preRef.current.scrollTop = scrollTop;
+                }
+              }
+            }}
+          />
         </div>
 
         <div style={{ flex: 1, position: "relative", background: styles.bg, transition: "background 0.3s ease" }}>
@@ -404,8 +466,8 @@ export function App() {
             >
               {error}
             </div>
-          ) : graph && graph.nodes.length > 0 ? (
-            <WorkflowGraph graph={graph} theme={theme} onNodeClick={handleNodeClick} />
+          ) : graphWithValidation && graphWithValidation.nodes.length > 0 ? (
+            <WorkflowGraph graph={graphWithValidation} theme={theme} onNodeClick={handleNodeClick} />
           ) : (
             <div
               style={{

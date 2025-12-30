@@ -29,7 +29,18 @@ export interface Job {
   env?: Record<string, unknown>;
   defaults?: Record<string, unknown>;
   outputs?: Record<string, string>;
+  strategy?: {
+    matrix?: MatrixConfig;
+    "fail-fast"?: boolean;
+    "max-parallel"?: number;
+  };
   [key: string]: unknown;
+}
+
+export interface MatrixConfig {
+  [key: string]: unknown[] | { include?: unknown[]; exclude?: unknown[] };
+  include?: Record<string, unknown>[];
+  exclude?: Record<string, unknown>[];
 }
 
 /**
@@ -43,7 +54,7 @@ export interface WorkflowGraph {
 
 export interface GraphNode {
   id: string;
-  type: "job";
+  type: "job" | "matrix-job";
   label: string;
   data: JobNodeData;
 }
@@ -57,6 +68,9 @@ export interface JobNodeData {
   steps?: Step[];
   validationStatus?: "valid" | "warning" | "error";
   validationIssues?: ValidationIssue[];
+  isMatrixJob?: boolean;
+  matrixCombination?: Record<string, unknown>;
+  parentJobId?: string;
 }
 
 export interface GraphEdge {

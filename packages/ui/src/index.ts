@@ -5,6 +5,7 @@
  */
 
 export { JobNode } from "./JobNode";
+export { MatrixJobNode } from "./MatrixJobNode";
 export { WorkflowGraph } from "./WorkflowGraph";
 export { StepDetailPanel } from "./StepDetailPanel";
 export { ActionModal } from "./ActionModal";

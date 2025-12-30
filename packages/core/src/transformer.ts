@@ -2,52 +2,174 @@
  * YAMLからグラフ構造への変換
  */
 
-import type { Workflow, WorkflowGraph, GraphNode, GraphEdge, JobNodeData } from "./types";
+import type { Workflow, WorkflowGraph, GraphNode, GraphEdge, JobNodeData, MatrixConfig } from "./types";
+import { expandMatrixConfig, formatMatrixCombinationName } from "./wrkflw";
+
+interface TransformOptions {
+  expandMatrix?: boolean;
+}
 
 /**
  * GitHub Workflow YAMLをグラフ構造に変換
  */
-export function transformWorkflowToGraph(workflow: Workflow): WorkflowGraph {
+export function transformWorkflowToGraph(
+  workflow: Workflow,
+  options: TransformOptions = {}
+): WorkflowGraph {
+  const { expandMatrix: shouldExpandMatrix = false } = options;  // デフォルトで展開しない
   const jobs = workflow.jobs || {};
   const jobEntries = Object.entries(jobs);
 
-  // ノード生成
-  const nodes: GraphNode[] = jobEntries.map(([jobId, job]) => {
+  const nodes: GraphNode[] = [];
+  const edges: GraphEdge[] = [];
+
+  for (const [jobId, job] of jobEntries) {
     const steps = job.steps || [];
-    const stepCount = steps.length;
     const needs = normalizeNeeds(job.needs);
 
-    const nodeData: JobNodeData = {
-      name: job.name || jobId,
-      runsOn: normalizeRunsOn(job.runsOn),
-      needs,
-      stepCount,
-      steps,
-    };
+    // マトリックス設定をチェック
+    const matrix = job.strategy?.matrix;
 
-    return {
+    if (matrix && shouldExpandMatrix && isExpandableMatrix(matrix)) {
+      // マトリックスジョブを展開
+      const matrixNodes = expandMatrixJob(jobId, job, matrix);
+      nodes.push(...matrixNodes);
+
+      // すべての展開ノードに対してneedsエッジを作成
+      for (const matrixNode of matrixNodes) {
+        for (const neededJob of needs) {
+          edges.push({
+            id: `${neededJob}-${matrixNode.id}`,
+            source: neededJob,
+            target: matrixNode.id,
+            label: "needs",
+          });
+        }
+      }
+    } else {
+      // 通常のジョブノード
+      const nodeData: JobNodeData = {
+        name: job.name || jobId,
+        runsOn: normalizeRunsOn(job.runsOn),
+        needs,
+        stepCount: steps.length,
+        steps,
+        isMatrixJob: !!matrix,
+      };
+
+      nodes.push({
+        id: jobId,
+        type: "job",
+        label: job.name || jobId,
+        data: nodeData,
+      });
+
+      // needsエッジを作成
+      for (const neededJob of needs) {
+        edges.push({
+          id: `${neededJob}-${jobId}`,
+          source: neededJob,
+          target: jobId,
+          label: "needs",
+        });
+      }
+    }
+  }
+
+  return { nodes, edges };
+}
+
+/**
+ * マトリックスジョブを展開して複数ノードを生成
+ */
+function expandMatrixJob(
+  jobId: string,
+  job: import("./types").Job,
+  matrix: MatrixConfig
+): GraphNode[] {
+  const nodes: GraphNode[] = [];
+
+  // wrkflw形式に変換
+  const wrkflwMatrix = convertToWrkflwMatrix(matrix);
+  const matrixJson = JSON.stringify(wrkflwMatrix);
+
+  try {
+    const combinations = expandMatrixConfig(matrixJson);
+
+    for (let i = 0; i < combinations.length; i++) {
+      const combination = combinations[i];
+      const combinationJson = JSON.stringify(combination.values);
+      const label = formatMatrixCombinationName(job.name || jobId, combinationJson);
+
+      const nodeData: JobNodeData = {
+        name: label,
+        runsOn: normalizeRunsOn(job.runsOn),
+        needs: normalizeNeeds(job.needs),
+        stepCount: (job.steps || []).length,
+        steps: job.steps,
+        isMatrixJob: true,
+        matrixCombination: combination.values,
+        parentJobId: jobId,
+      };
+
+      nodes.push({
+        id: `${jobId}-matrix-${i}`,
+        type: "matrix-job",
+        label,
+        data: nodeData,
+      });
+    }
+  } catch (e) {
+    console.error("Matrix expansion failed:", e);
+    // フォールバック: 単一ノード
+    nodes.push({
       id: jobId,
       type: "job",
       label: job.name || jobId,
-      data: nodeData,
-    };
-  });
-
-  // エッジ生成（needs依存関係）
-  const edges: GraphEdge[] = [];
-  jobEntries.forEach(([jobId, job]) => {
-    const needs = normalizeNeeds(job.needs);
-    needs.forEach((neededJob) => {
-      edges.push({
-        id: `${neededJob}-${jobId}`,
-        source: neededJob,
-        target: jobId,
-        label: "needs",
-      });
+      data: {
+        name: job.name || jobId,
+        runsOn: normalizeRunsOn(job.runsOn),
+        needs: normalizeNeeds(job.needs),
+        stepCount: (job.steps || []).length,
+        steps: job.steps,
+        isMatrixJob: true,
+      },
     });
-  });
+  }
 
-  return { nodes, edges };
+  return nodes;
+}
+
+/**
+ * マトリックス設定が展開可能かチェック
+ */
+function isExpandableMatrix(matrix: MatrixConfig): boolean {
+  // 少なくとも1つのパラメータ配列が存在するかチェック
+  for (const [key, value] of Object.entries(matrix)) {
+    if (key !== "include" && key !== "exclude" && Array.isArray(value) && value.length > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * YAMLVizのMatrixConfigをwrkflw形式に変換
+ */
+function convertToWrkflwMatrix(matrix: MatrixConfig): Record<string, unknown> {
+  const parameters: Record<string, unknown[]> = {};
+
+  for (const [key, value] of Object.entries(matrix)) {
+    if (key !== "include" && key !== "exclude" && Array.isArray(value)) {
+      parameters[key] = value;
+    }
+  }
+
+  const result: Record<string, unknown> = { parameters };
+  if (matrix.include) result.include = matrix.include;
+  if (matrix.exclude) result.exclude = matrix.exclude;
+
+  return result;
 }
 
 /**

@@ -13,11 +13,13 @@ import {
   type Node,
 } from "@xyflow/react";
 import { JobNode } from "./JobNode";
+import { MatrixJobNode } from "./MatrixJobNode";
 import type { WorkflowGraph } from "@yamlviz/core";
 import "@xyflow/react/dist/style.css";
 
 const nodeTypes = {
   job: JobNode,
+  "matrix-job": MatrixJobNode,
 };
 
 interface WorkflowGraphProps {
